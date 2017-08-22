@@ -1,0 +1,23 @@
+{
+  "name": "gen9_telemetry",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "debug",
+    "start": "node ."
+  },
+  "keywords": [
+    "Blue",
+    "Sky",
+    "Solar",
+    "Racing"
+  ],
+  "author": "James Liu",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.1.0",
+    "js-base64": "^2.1.9",
+    "serialport": "^5.0.0"
+  }
+}
