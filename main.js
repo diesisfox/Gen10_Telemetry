@@ -42,7 +42,7 @@ function choosePort(){
 }
 
 function displayFrame(frame){
-
+	console.log(frame);
 }
 
 function scanPorts() {

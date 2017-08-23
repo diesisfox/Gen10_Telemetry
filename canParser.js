@@ -5,18 +5,14 @@ const startingBytes = [
 	[0x29, 0x2a, 0x2c, 0x2d, 0x2e, 0x3a, 0x3b, 0x3c, 0x3e]
 ];
 
-function isValidDataByte(x){
+function isValidDataByte(x){ //TODO replace with regexp
 	if( x>='A' && x<='Z' ||
 		x>='a' && x<='z' ||
+		x>='0' && x<='9' ||
 		x=='+' || x=='/' || x=='='){
 		return true;
 	}
 	return false;
-}
-
-function unreplaceChars(str){
-	str = str.replace('?','A');
-	str = str.replace('@','+');
 }
 
 function parseFrame(buf, fmt){
@@ -26,14 +22,14 @@ function parseFrame(buf, fmt){
 	frm.dlc = fmt.dlc;
 	frm.data = [];
 	if(fmt.ide){
-		frm.id = buf.readUInt32BE(0) & 0xfffffff8;
+		frm.id = (buf.readUInt32BE(0) & 0xfffffff8) >> 3;
 		for(let i=0; i<fmt.dlc; i++){
-			frm.data.push(buf[3+i]&0x07 | buf[4+i]&0xf8);
+			frm.data.push((buf[3+i]&0x07)<<5 | (buf[4+i]&0xf8)>>3);
 		}
 	}else{
-		frm.id = buf.readUInt16BE(0) & 0xffe0;
+		frm.id = (buf.readUInt16BE(0) & 0xffe0) >> 5;
 		for(let i=0; i<fmt.dlc; i++){
-			frm.data.push(buf[1+i]&0x1f | buf[2+i]&0xe0);
+			frm.data.push((buf[1+i]&0x1f)<<3 | (buf[2+i]&0xe0)>>5);
 		}
 	}
 	return frm;
@@ -51,7 +47,7 @@ function parseStartingByte(x){
 			}
 		}
 	}
-	return {};
+	return false;
 }
 
 class CanParser extends stream.Writable{
@@ -75,11 +71,12 @@ class CanParser extends stream.Writable{
 	}
 
 	processIncoming(){
-		unreplaceChars(this.buf);
+		this.unreplaceChars();
 		while(this.buf.length >= 5){
 			let fmt = parseStartingByte(this.buf[0]);
 			if(fmt){
-				if(this.verifyData(this.buf, fmt.bytes)){
+				if(this.buf.length < fmt.bytes+1) return;
+				if(this.verifyData(fmt.bytes)){
 					let frameBytes = Buffer.from(this.buf.slice(1, 1+fmt.bytes), 'base64');
 					this.buf = this.buf.slice(1+fmt.bytes);
 					this.emit('frame', parseFrame(frameBytes, fmt));
@@ -90,15 +87,18 @@ class CanParser extends stream.Writable{
 		}
 	}
 
-	verifyData(str, bytes){ //also cuts away bad data
-		if(this.buf.length < bytes+1) return false;
+	verifyData(bytes){ //also cuts away bad data
 		for(let i=0; i<bytes; i++){
-			if(!isValidDataByte(str[i+1])){
-				str = str.slice(i+2);
+			if(!isValidDataByte(this.buf[i+1])){
+				this.buf = this.buf.slice(i+1);
 				return false;
 			}
 		}
 		return true;
+	}
+
+	unreplaceChars(){
+		this.buf = this.buf.replace(/\?/g,'A').replace(/@/g,'+');
 	}
 }
 

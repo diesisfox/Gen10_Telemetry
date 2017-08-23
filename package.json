@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "debug",
+    "test": "node --inspect-brk .",
     "start": "node ."
   },
   "keywords": [
@@ -16,6 +16,7 @@
   "author": "James Liu",
   "license": "ISC",
   "dependencies": {
+    "ansi-escapes": "^2.0.0",
     "chalk": "^2.1.0",
     "js-base64": "^2.1.9",
     "serialport": "^5.0.0"
