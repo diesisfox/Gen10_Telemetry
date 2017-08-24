@@ -17,19 +17,19 @@ function isValidDataByte(x){ //TODO replace with regexp
 
 function parseFrame(buf, fmt){
 	let frm = {};
-	frm.timestamp = Date.now();
+	frm.timestamp = new Date();
 	frm.ide = fmt.ide;
 	frm.dlc = fmt.dlc;
-	frm.data = [];
+	frm.data = Buffer.alloc(fmt.dlc);
 	if(fmt.ide){
 		frm.id = (buf.readUInt32BE(0) & 0xfffffff8) >> 3;
 		for(let i=0; i<fmt.dlc; i++){
-			frm.data.push((buf[3+i]&0x07)<<5 | (buf[4+i]&0xf8)>>3);
+			frm.data[i] = ((buf[3+i]&0x07)<<5 | (buf[4+i]&0xf8)>>3);
 		}
 	}else{
 		frm.id = (buf.readUInt16BE(0) & 0xffe0) >> 5;
 		for(let i=0; i<fmt.dlc; i++){
-			frm.data.push((buf[1+i]&0x1f)<<3 | (buf[2+i]&0xe0)>>5);
+			frm.data[i] = ((buf[1+i]&0x1f)<<3 | (buf[2+i]&0xe0)>>5);
 		}
 	}
 	return frm;
