@@ -1,13 +1,17 @@
 const readline = require('readline');
+const fs = require('fs');
 const SerialPort = require('serialport');
 const chalk = require('chalk');
 const ansi = require('ansi-escapes');
+const dateformat = require('dateformat');
 const CanParser = require('./CanParser.js');
 
 const stdio = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout
 });
+
+// var stream = fs.createWriteStream("./logs/lol.txt");
 
 const log = console.log;
 var radioPort, canParser, frameBank = [];
@@ -75,11 +79,13 @@ ${
 
 ${chalk.cyan('CELL TEMPERATURES:')}
 ${
-	Array(16).join(0).split(0).map((item, i) => `${i*2+0}: ${
-		frameBank[0x500+i] ? chalk.yellow((frameBank[0x500+i].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
-	} °C,	${i*2+1}: ${
-		frameBank[0x500+i] ? chalk.yellow((frameBank[0x500+i].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
-	} °C,`).join('\t')
+	Array(8).join(0).split(0).map((item, i) => `${
+		Array(2).join(0).split(0).map((item, j) => `${i*4+j*2+0}: ${
+			frameBank[0x500+i*2+j] ? chalk.yellow((frameBank[0x500+i*2+j].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
+		} °C,	${i*4+j*2+1}: ${
+			frameBank[0x500+i*2+j] ? chalk.yellow((frameBank[0x500+i*2+j].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
+		} °C,`).join('\t')
+	}`).join('\n')
 }
 
 ${chalk.cyan('PPT POWERS:')}
@@ -92,6 +98,12 @@ ${
 		frameBank[0x20A+i] ? chalk.yellow(((frameBank[0x20A+i].data.readInt32BE(0)/1E6) * (frameBank[0x201].data.readInt32BE(4)/1E6)).toFixed(3)) : '?'
 	} W`).join('\n')
 }
+
+${chalk.cyan('MOTOR CONTROL:')}
+Last Reset: ${frameBank[0x503] ? chalk.magenta(frameBank[0x503].timestamp.toLocaleDateString()) : '?'}
+Drive:	Velocity: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(0)).toFixed(3)) : '?'} rpm,	Current: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(4)*100).toFixed(3)) : '?'} %
+Power: ${frameBank[0x502] ? chalk.yellow((frameBank[0x502].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x502].data.readFloatLE(4)).toFixed(3)) : '?'}
+Stats: ${frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x403].data.readFloatLE(4)).toFixed(3)) : '?'}
 
 ${chalk.cyan('HEARTBEAT TIMESTAMPS:')}
 ${
