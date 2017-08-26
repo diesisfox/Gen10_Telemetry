@@ -1,5 +1,6 @@
 const readline = require('readline');
 const fs = require('fs');
+const util = require('util');
 const SerialPort = require('serialport');
 const chalk = require('chalk');
 const ansi = require('ansi-escapes');
@@ -11,9 +12,21 @@ const stdio = readline.createInterface({
 	output: process.stdout
 });
 
-// var stream = fs.createWriteStream("./logs/lol.txt");
-
 const log = console.log;
+
+fs.stat(`./logs`,(err,stat)=>{
+	if(stat && stat.isDirectory()){
+
+	}else{
+		fs.mkdir('./logs',(e)=>{
+			if(e) log(e);
+		})
+	}
+})
+
+var logFile = fs.createWriteStream(`./logs/${dateformat(new Date(),'yyyymmdd-HHMMss')}.log`);
+
+
 var radioPort, canParser, frameBank = [];
 
 
@@ -47,11 +60,11 @@ function choosePort(){
 
 function displayFrame(frame){
 	frameBank[frame.id] = frame;
-	drawReport();
-	console.log('\n',frame);
+	drawReport(frame);
+	logFile.write(util.inspect(frame)+',\n');
 }
 
-function drawReport(){
+function drawReport(frame){
 	[w,h] = process.stdout.getWindowSize();
 	process.stdout.write(`${ansi.clearScreen}${('#').repeat(w)}
 
@@ -113,5 +126,7 @@ ${
 }
 
 ${('#').repeat(w)}
+
+${util.inspect(frame,{colors:true})}
 `);
 }
