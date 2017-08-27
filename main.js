@@ -13,22 +13,18 @@ const stdio = readline.createInterface({
 });
 
 const log = console.log;
+var radioPort, canParser, logFile, frameBank = [];
 
 fs.stat(`./logs`,(err,stat)=>{
 	if(stat && stat.isDirectory()){
-
+		logFile = fs.createWriteStream(`./logs/${dateformat(new Date(),'yyyymmdd-HHMMss')}.log`);
 	}else{
 		fs.mkdir('./logs',(e)=>{
 			if(e) log(e);
+			logFile = fs.createWriteStream(`./logs/${dateformat(new Date(),'yyyymmdd-HHMMss')}.log`);
 		})
 	}
 })
-
-var logFile = fs.createWriteStream(`./logs/${dateformat(new Date(),'yyyymmdd-HHMMss')}.log`);
-
-
-var radioPort, canParser, frameBank = [];
-
 
 SerialPort.list((err,ports)=>{
 	if(ports.length){
