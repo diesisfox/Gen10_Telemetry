@@ -97,6 +97,14 @@ ${
 	}`).join('\n')
 }
 
+${chalk.cyan('MISC TEMPERATURES:')}
+Driver Temperature: ${
+	frameBank[0x540] ? chalk.yellow((frameBank[0x540].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
+} °C
+Motor Temperature: ${
+	frameBank[0x540] ? chalk.yellow((frameBank[0x540].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
+} °C
+
 ${chalk.cyan('PPT POWERS:')}
 ${
 	Array(3).join(0).split(0).map((item, i) => `PPT${i}: Voltage: ${
@@ -104,7 +112,7 @@ ${
 	} V,	Current: ${
 		frameBank[0x20A+i] ? chalk.yellow((frameBank[0x20A+i].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
 	} A,	Power: ${
-		frameBank[0x20A+i] ? chalk.yellow(((frameBank[0x20A+i].data.readInt32BE(0)/1E6) * (frameBank[0x201].data.readInt32BE(4)/1E6)).toFixed(3)) : '?'
+		frameBank[0x20A+i] ? chalk.yellow(((frameBank[0x20A+i].data.readInt32BE(0)/1E6) * (frameBank[0x20A+i].data.readInt32BE(4)/1E6)).toFixed(3)) : '?'
 	} W`).join('\n')
 }
 
