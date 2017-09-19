@@ -5,7 +5,7 @@ const SerialPort = require('serialport');
 const chalk = require('chalk');
 const ansi = require('ansi-escapes');
 const dateformat = require('dateformat');
-const CanParser = require('./CanParser.js');
+const CanParser = require('./canParser.js');
 
 const stdio = readline.createInterface({
 	input: process.stdin,
@@ -103,6 +103,9 @@ Driver Temperature: ${
 } °C
 Motor Temperature: ${
 	frameBank[0x540] ? chalk.yellow((frameBank[0x540].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
+} °C
+MCB CPU Temperature: ${
+	frameBank[0x541] ? chalk.yellow((frameBank[0x541].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
 } °C
 
 ${chalk.cyan('PPT POWERS:')}
