@@ -75,7 +75,7 @@ Voltage: ${
 
 ${chalk.cyan('CELL VOLTAGES:')}
 ${
-	Array(9).join(0).split(0).map((item, i) => `L${Math.floor(i/3)}C${(i%3)*4+0}: ${
+	Array(9).fill(null).map((item, i) => `L${Math.floor(i/3)}C${(i%3)*4+0}: ${
 		frameBank[0x350+i] ? chalk.yellow((frameBank[0x350+i].data.readUInt16BE(0)/1E4).toFixed(3)) : '?'
 	} V,	L${Math.floor(i/3)}C${(i%3)*4+1}: ${
 		frameBank[0x350+i] ? chalk.yellow((frameBank[0x350+i].data.readUInt16BE(2)/1E4).toFixed(3)) : '?'
@@ -88,8 +88,8 @@ ${
 
 ${chalk.cyan('CELL TEMPERATURES:')}
 ${
-	Array(8).join(0).split(0).map((item, i) => `${
-		Array(2).join(0).split(0).map((item, j) => `${i*4+j*2+0}: ${
+	Array(8).fill(null).map((item, i) => `${
+		Array(2).fill(null).map((item, j) => `${i*4+j*2+0}: ${
 			frameBank[0x500+i*2+j] ? chalk.yellow((frameBank[0x500+i*2+j].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
 		} °C,	${i*4+j*2+1}: ${
 			frameBank[0x500+i*2+j] ? chalk.yellow((frameBank[0x500+i*2+j].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
@@ -110,7 +110,7 @@ MCB CPU Temperature: ${
 
 ${chalk.cyan('PPT POWERS:')}
 ${
-	Array(3).join(0).split(0).map((item, i) => `PPT${i}: Voltage: ${
+	Array(3).fill(null).map((item, i) => `PPT${i}: Voltage: ${
 		frameBank[0x20A+i] ? chalk.yellow((frameBank[0x20A+i].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
 	} V,	Current: ${
 		frameBank[0x20A+i] ? chalk.yellow((frameBank[0x20A+i].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
@@ -127,7 +127,7 @@ Stats: ${frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)).
 
 ${chalk.cyan('HEARTBEAT TIMESTAMPS:')}
 ${
-	Array(16).join(0).split(0).map((item, i) => `${i}: ${
+	Array(16).fill(null).map((item, i) => `${i}: ${
 		frameBank[0x050+i] ? chalk.magenta(frameBank[0x050+i].timestamp.toLocaleTimeString()) : '?'
 	}, `).join('')
 }
