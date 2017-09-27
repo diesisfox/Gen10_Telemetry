@@ -6,6 +6,8 @@ const chalk = require('chalk');
 const ansi = require('ansi-escapes');
 const dateformat = require('dateformat');
 const CanParser = require('./canParser.js');
+const tk = require('terminal-kit');
+const childProcess = require('child_process');
 
 const stdio = readline.createInterface({
 	input: process.stdin,
@@ -37,6 +39,31 @@ SerialPort.list((err,ports)=>{
 	}
 });
 
+tk.terminal.on('mouse',(name,data)=>{
+	if(name == 'MOUSE_LEFT_BUTTON_PRESSED'){
+		readReport();
+	}else if(name == 'MOUSE_RIGHT_BUTTON_PRESSED'){
+		childProcess.spawn('osascript', ['-e','say "Fuck you too Frank!"']);
+	}
+});
+
+function readReport(){
+	let reports = [];
+	if(frameBank[0x05048225]){
+		reports.push(`the speed is ${(((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(1)} KPH`);
+	}
+	if(frameBank[0x201]){
+		reports.push(`the power is ${((frameBank[0x201].data.readInt32BE(0)/1E6) * (frameBank[0x201].data.readInt32BE(4)/1E6)).toFixed(0)} watts`);
+		reports.push(`the voltage is ${(frameBank[0x201].data.readInt32BE(0)/1E6).toFixed(1)} volts`);
+	}
+	if(frameBank[0x540]){
+		reports.push(`the motor temperature is ${(frameBank[0x540].data.readInt32BE(4)/1E6).toFixed(1)} degrees`);
+	}
+	if(reports.length>1)reports[reports.length-1] = 'and ' + reports[reports.length-1];
+	reports = reports.join(', ');
+	childProcess.spawn('osascript', ['-e',`say "${reports}"`]);
+}
+
 function choosePort(){
 	stdio.question('> ', (res)=>{
 		res = parseInt(res);
@@ -58,6 +85,7 @@ function displayFrame(frame){
 	frameBank[frame.id] = frame;
 	drawReport(frame);
 	logFile.write(util.inspect(frame)+',\n');
+	tk.terminal.grabInput({mouse:'button'});
 }
 
 function drawReport(frame){
@@ -124,6 +152,7 @@ Last Reset: ${frameBank[0x503] ? chalk.magenta(frameBank[0x503].timestamp.toLoca
 Drive:	Velocity: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(0)).toFixed(3)) : '?'} rpm,	Current: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(4)*100).toFixed(3)) : '?'} %
 Power: ${frameBank[0x502] ? chalk.yellow((frameBank[0x502].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x502].data.readFloatLE(4)).toFixed(3)) : '?'}
 Stats: ${frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x403].data.readFloatLE(4)).toFixed(3)) : '?'}
+Speed: ${frameBank[0x05048225] ? chalk.yellow((((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(3)) : '?'}
 
 ${chalk.cyan('HEARTBEAT TIMESTAMPS:')}
 ${

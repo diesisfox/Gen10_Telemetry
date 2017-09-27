@@ -20,6 +20,6 @@
     "chalk": "^2.1.0",
     "dateformat": "^2.0.0",
     "serialport": "^5.0.0",
-    "terminal-kit": "^1.13.7"
+    "terminal-kit": "^1.13.11"
   }
 }
