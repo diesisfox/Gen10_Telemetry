@@ -118,9 +118,9 @@ ${chalk.cyan('CELL TEMPERATURES:')}
 ${
 	Array(8).fill(null).map((item, i) => `${
 		Array(2).fill(null).map((item, j) => `${i*4+j*2+0}: ${
-			frameBank[0x500+i*2+j] ? chalk.yellow((frameBank[0x500+i*2+j].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
+			frameBank[0x580+i*2+j] ? chalk.yellow((frameBank[0x580+i*2+j].data.readInt32BE(0)/1E6).toFixed(3)) : '?'
 		} °C,	${i*4+j*2+1}: ${
-			frameBank[0x500+i*2+j] ? chalk.yellow((frameBank[0x500+i*2+j].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
+			frameBank[0x580+i*2+j] ? chalk.yellow((frameBank[0x580+i*2+j].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
 		} °C,`).join('\t')
 	}`).join('\n')
 }
@@ -152,7 +152,10 @@ Last Reset: ${frameBank[0x503] ? chalk.magenta(frameBank[0x503].timestamp.toLoca
 Drive:	Velocity: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(0)).toFixed(3)) : '?'} rpm,	Current: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(4)*100).toFixed(3)) : '?'} %
 Power: ${frameBank[0x502] ? chalk.yellow((frameBank[0x502].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x502].data.readFloatLE(4)).toFixed(3)) : '?'}
 Stats: ${frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x403].data.readFloatLE(4)).toFixed(3)) : '?'}
-Speed: ${frameBank[0x05048225] ? chalk.yellow((((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(3)) : '?'}
+Speed: ${
+	// frameBank[0x05048225] ? chalk.yellow((((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
+	frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
+}
 
 ${chalk.cyan('HEARTBEAT TIMESTAMPS:')}
 ${
