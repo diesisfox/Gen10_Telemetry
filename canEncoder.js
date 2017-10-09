@@ -28,51 +28,6 @@ function encode(frm){
 	return Buffer.concat([Buffer.from([startingBytes[frm.ide][frm.dlc]]), frameBuf]);
 }
 
-function isValidDataByte(x){ //TODO replace with regexp
-	if( x>='A' && x<='Z' ||
-		x>='a' && x<='z' ||
-		x>='0' && x<='9' ||
-		x=='+' || x=='/' || x=='='){
-		return true;
-	}
-	return false;
-}
-
-function parseFrame(buf, fmt){
-	let frm = {};
-	frm.timestamp = new Date();
-	frm.ide = fmt.ide;
-	frm.dlc = fmt.dlc;
-	frm.data = Buffer.alloc(fmt.dlc);
-	if(fmt.ide){
-		frm.id = (buf.readUInt32BE(0) & 0xfffffff8) >> 3;
-		for(let i=0; i<fmt.dlc; i++){
-			frm.data[i] = ((buf[3+i]&0x07)<<5 | (buf[4+i]&0xf8)>>3);
-		}
-	}else{
-		frm.id = (buf.readUInt16BE(0) & 0xffe0) >> 5;
-		for(let i=0; i<fmt.dlc; i++){
-			frm.data[i] = ((buf[1+i]&0x1f)<<3 | (buf[2+i]&0xe0)>>5);
-		}
-	}
-	return frm;
-}
-
-function parseStartingByte(x){
-	for(let i=0; i<startingBytes.length; i++){
-		for(let j=0; j<startingBytes[i].length; j++){
-			if(x.charCodeAt() == startingBytes[i][j]){
-				return {
-					ide: i,
-					dlc: j,
-					bytes: Math.ceil(((i?29:11)+j*8)/24)*4
-				};
-			}
-		}
-	}
-	return false;
-}
-
 class CanParser extends stream.Writable{
 	constructor(options){
 		super(options);

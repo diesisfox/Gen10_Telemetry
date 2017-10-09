@@ -78,10 +78,11 @@ class CanParser extends stream.Writable{
 				if(this.buf.length < fmt.bytes+1) return;
 				if(this.verifyData(fmt.bytes)){
 					let frameBytes = Buffer.from(this.buf.slice(1, 1+fmt.bytes), 'base64');
-					this.buf = this.buf.slice(1+fmt.bytes);
+					this.buf = this.buf.slice(1+fmt.bytes); //TODO this line is the index out of range
 					this.emit('frame', parseFrame(frameBytes, fmt));
 				}
 			}else{
+				this.emit('drop', 1, this.buf[0]);
 				this.buf = this.buf.slice(1);
 			}
 		}

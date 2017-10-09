@@ -16,6 +16,8 @@ const stdio = readline.createInterface({
 
 const log = console.log;
 var radioPort, canParser, logFile, frameBank = [];
+var powerBuf = [];
+var poweravg;
 
 fs.stat(`./logs`,(err,stat)=>{
 	if(stat && stat.isDirectory()){
@@ -83,6 +85,21 @@ function choosePort(){
 
 function displayFrame(frame){
 	frameBank[frame.id] = frame;
+	if(frame.id == 0x201){
+		powerBuf.push({
+			value: (frame.data.readInt32BE(0)/1E6) * (frame.data.readInt32BE(4)/1E6),
+			timestamp: frame.timestamp,
+		});
+		poweravg = 0;
+		for(let i=0; i<powerBuf.length; i++){
+			if(powerBuf[i].timestamp < Date.now()-300000){
+				powerBuf.shift();
+			}else{
+				poweravg+=powerBuf[i].value;
+			}
+		}
+		poweravg/=powerBuf.length;
+	}
 	drawReport(frame);
 	logFile.write(util.inspect(frame)+',\n');
 	tk.terminal.grabInput({mouse:'button'});
@@ -99,7 +116,9 @@ Voltage: ${
 	frameBank[0x201] ? chalk.yellow((frameBank[0x201].data.readInt32BE(4)/1E6).toFixed(3)) : '?'
 } A,	Power: ${
 	frameBank[0x201] ? chalk.yellow(((frameBank[0x201].data.readInt32BE(0)/1E6) * (frameBank[0x201].data.readInt32BE(4)/1E6)).toFixed(3)) : '?'
-} W
+} W,	5minAvg: ${
+	poweravg? chalk.yellow(poweravg.toFixed(3)) + ' (' + powerBuf.length + ' pcs)' : '?'
+}
 
 ${chalk.cyan('CELL VOLTAGES:')}
 ${
@@ -153,8 +172,8 @@ Drive:	Velocity: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFl
 Power: ${frameBank[0x502] ? chalk.yellow((frameBank[0x502].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x502].data.readFloatLE(4)).toFixed(3)) : '?'}
 Stats: ${frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x403].data.readFloatLE(4)).toFixed(3)) : '?'}
 Speed: ${
-	// frameBank[0x05048225] ? chalk.yellow((((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
-	frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
+	frameBank[0x05048225] ? chalk.yellow((((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
+	// frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
 }
 
 ${chalk.cyan('HEARTBEAT TIMESTAMPS:')}
