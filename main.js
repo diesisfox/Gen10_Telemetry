@@ -92,7 +92,7 @@ function displayFrame(frame){
 		});
 		poweravg = 0;
 		for(let i=0; i<powerBuf.length; i++){
-			if(powerBuf[i].timestamp < Date.now()-300000){
+			if(powerBuf[i].timestamp < Date.now()-600000){
 				powerBuf.shift();
 			}else{
 				poweravg+=powerBuf[i].value;

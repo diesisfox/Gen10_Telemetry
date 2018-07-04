@@ -71,6 +71,14 @@ const canID = {
 	WS22_VELO_MES	= 0x403,
 };
 
+const muduleNames = {
+	1: "CC",
+	2: "MCI",
+	3: "BPS",
+	4: "ADS",
+	6: "RDL",
+}
+
 class SolarCar extends EventEmitter{
 	constructor(parser, encoder){
 		super();
@@ -136,7 +144,7 @@ class SolarCar extends EventEmitter{
 }
 
 class CanModule{
-	constructor(ID, name){
+	constructor(ID, name, solarCar){
 		super();
 		this._FW = 0;
 		this._connState = connState.DISCONNECTED;
@@ -154,7 +162,8 @@ class CanModule{
 	set SW(sw){this._SW = sw;}
 	get SW(){return this._SW;}
 
-	set solarCar(sc)
+	set solarCar(sc){this._solarCar = sc;}
+	get SolarCar(){return this._solarCar;}
 }
 
 module.exports = SolarCar;
@@ -163,3 +172,4 @@ module.exports.nodeState = nodeState;
 module.exports.nodeCommand = nodeCommand;
 module.exports.nodeID = nodeID;
 module.exports.canID = canID;
+module.exports.muduleNames = muduleNames;
