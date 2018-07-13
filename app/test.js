@@ -2,7 +2,7 @@ const readline = require('readline');
 const SerialPort = require('serialport');
 const chalk = require('chalk');
 const ansi = require('ansi-escapes');
-const CanParser = require('./CanParser.js');
+const CanParser = require('./canParser.js');
 
 var frameBank = [];
 
