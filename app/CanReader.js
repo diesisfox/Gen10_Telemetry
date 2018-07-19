@@ -1,57 +1,16 @@
-/*
-  Lists Serial ports, allows for selection, establishes connection
-*/
-const SerialPort = require('serialport');
-const readline = require('readline');
+'use strict';
+
 const chalk = require('chalk');
 const ansi = require('ansi-escapes');
 const tk = require('terminal-kit');
-const CanParser = require('./canParser');
+const childProcess = require('child_process');
+const util = require('util');
 
-let radioPort, canParser;
-let frameBank, powerBuf = [];
 let poweravg;
+let frameBank = [];
+let powerBuf = [];
 
-const stdio = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-function choosePort(){
-    stdio.question('> ', (res)=>{
-        res = parseInt(res);
-        if(Number.isNaN(res) || res >= radioPort.length || res<0){
-            log(chalk.red("Pls no fucktarderino"));
-            choosePort();
-        }else{
-            radioPort = new SerialPort(radioPort[res].comName,{
-                baudRate:115200
-            });
-            canParser = new CanParser;
-            radioPort.pipe(canParser);
-            canParser.on('frame', displayFrame);
-        }
-    })
-}
-
-function readReport(){
-    let reports = [];
-    if(frameBank[0x05048225]){
-        reports.push(`the speed is ${(((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(1)} KPH`);
-    }
-    if(frameBank[0x201]){
-        reports.push(`the power is ${((frameBank[0x201].data.readInt32BE(0)/1E6) * (frameBank[0x201].data.readInt32BE(4)/1E6)).toFixed(0)} watts`);
-        reports.push(`the voltage is ${(frameBank[0x201].data.readInt32BE(0)/1E6).toFixed(1)} volts`);
-    }
-    if(frameBank[0x540]){
-        reports.push(`the motor temperature is ${(frameBank[0x540].data.readInt32BE(4)/1E6).toFixed(1)} degrees`);
-    }
-    if(reports.length>1)reports[reports.length-1] = 'and ' + reports[reports.length-1];
-    reports = reports.join(', ');
-    childProcess.spawn('osascript', ['-e',`say "${reports}"`]);
-}
-
-function displayFrame(frame){
+function displayFrame(frame, logFile){
     frameBank[frame.id] = frame;
     if(frame.id == 0x201){
         powerBuf.push({
@@ -157,23 +116,22 @@ ${util.inspect(frame,{colors:true})}
 `);
 }
 
-class SelectReadSerialPort {
-    reportRead(){
-        readReport();
+function readReport(){
+    let reports = [];
+    if(frameBank[0x05048225]){
+        reports.push(`the speed is ${(((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(1)} KPH`);
     }
-
-    selectPort(){
-        SerialPort.list((err,ports)=>{
-            if(ports.length){
-                radioPort = ports;
-                console.log('Choose a serial port:');
-                for(let i=0; i<ports.length; i++){
-                    console.log(chalk.yellow(i)+') ' + chalk.cyan(ports[i].comName) + ', manufacturer: ' + chalk.dim(ports[i].manufacturer));
-                }
-                choosePort();
-            }
-        });
+    if(frameBank[0x201]){
+        reports.push(`the power is ${((frameBank[0x201].data.readInt32BE(0)/1E6) * (frameBank[0x201].data.readInt32BE(4)/1E6)).toFixed(0)} watts`);
+        reports.push(`the voltage is ${(frameBank[0x201].data.readInt32BE(0)/1E6).toFixed(1)} volts`);
     }
+    if(frameBank[0x540]){
+        reports.push(`the motor temperature is ${(frameBank[0x540].data.readInt32BE(4)/1E6).toFixed(1)} degrees`);
+    }
+    if(reports.length>1)reports[reports.length-1] = 'and ' + reports[reports.length-1];
+    reports = reports.join(', ');
+    childProcess.spawn('osascript', ['-e',`say "${reports}"`]);
 }
 
-module.exports = SelectReadSerialPort;
+module.exports.displayFrame = displayFrame;
+module.exports.readReport = readReport;

@@ -13,7 +13,7 @@
     "Solar",
     "Racing"
   ],
-  "author": "James Liu",
+  "author": "James Liu, Ryan Song, Japtegh Singh",
   "license": "ISC",
   "dependencies": {
     "ansi-escapes": "^2.0.0",
