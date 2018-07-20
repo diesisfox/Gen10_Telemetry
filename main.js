@@ -2,9 +2,6 @@
     Main js file for genX telemetry
 */
 'use strict';
-//NOTE: Electron doesn't work with serial port. At least when I tried, it messed everything up.
-//We might have to run it in a way where electron is built on top of this already created backend without ever
-//relying on the serial port module.
 
 //node modules
 const EventEmitter = require('events');
@@ -27,7 +24,7 @@ SerialPort.ConnectSerial(radioPort);
 //Creating file to log
 emtr.on('SerialPort:connected',()=>{
     LogStream.create(logFile);
-console.log('Log file created');
+    console.log('Log file created');
 });
 
 //Creating New CAN Parser
