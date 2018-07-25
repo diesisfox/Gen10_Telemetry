@@ -1,12 +1,12 @@
 {
-  "name": "gen9_telemetry",
+  "name": "BlueSky_Telemetry",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
   "scripts": {
     "test": "node --inspect-brk .",
-    "start": "node .",
-    "rebuild": "electron-rebuild -f -w GenX_Telemetry"
+    "start": "electron .",
+    "rebuild": "electron-rebuild -f -w Gen10_Telemetry"
   },
   "keywords": [
     "Blue",
@@ -21,7 +21,7 @@
     "chalk": "^2.1.0",
     "dateformat": "^2.0.0",
     "electron": "^2.0.5",
-    "serialport": "^6.2.1",
+    "serialport": "^6.2.2",
     "terminal-kit": "^1.13.11"
   },
   "devDependencies": {

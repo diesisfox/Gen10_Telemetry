@@ -20,7 +20,7 @@ const rl = readline.createInterface({
 });
 
 //lists the available ports for connection
-function listSerialPorts(){
+function PrintSerialPorts(){
     SerialPort.list((err, ports) => {
         portList = ports;
         let portNumber = 0;
@@ -40,7 +40,7 @@ function inputBaudRate(){
 
 function SerialChooseAndConnect(port) {
     console.log('Choose a serial port to listen to:');
-    listSerialPorts();
+    PrintSerialPorts();
     rl.question('Enter serial port number: ', (answer)=>{
         if(answer >= portList.length || answer < 0 || Number.isNaN(answer)){
             console.log('This port does not exist dumb ass');
@@ -57,4 +57,12 @@ function SerialChooseAndConnect(port) {
     });
 }
 
+function saveSerialPorts(){
+    SerialPort.list((err, ports) => {
+        return ports;
+    });
+}
+
+
 module.exports.ConnectSerial = SerialChooseAndConnect;
+module.exports.saveSerialPorts = saveSerialPorts;
