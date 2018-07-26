@@ -63,6 +63,14 @@ function saveSerialPorts(){
     });
 }
 
+function connect(comName, baudRate){
+    const newPort = new SerialPort(comName, {
+        baudRate: baudRate
+    });
+
+    return newPort;
+}
 
 module.exports.ConnectSerial = SerialChooseAndConnect;
 module.exports.saveSerialPorts = saveSerialPorts;
+module.exports.connect = connect;
