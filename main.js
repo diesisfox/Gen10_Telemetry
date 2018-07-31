@@ -55,12 +55,12 @@ emtr.on('LogFile:created', ()=>{
 //Node Modules
 const electron = require('electron');
 const { ipcMain, app, Menu } = electron;
+const SerialPort = require('serialport');
 
 //Custom Modules
 const MainWindow = require('./MainWindow/Class');
 let main;
-
-const serial = require('./app/ConnectSerial');
+let port;
 
 app.on('ready', ()=>{
     main = new MainWindow(`file://${__dirname}/index.html`);
@@ -69,8 +69,26 @@ app.on('ready', ()=>{
     Menu.setApplicationMenu(mainMenu);
 });
 
+app.on('quit', () => {
+   if(port.isOpen){
+       port.close()
+   }
+});
+
+ipcMain.on('connect', (event, portInfo) => {
+    const baudRateInt = parseInt(portInfo.baudRate, 10);
+    port = new SerialPort(portInfo.comName, {baudRate: baudRateInt}, (err) => {
+        if(err){
+            main.webContents.send('ConnectionError', err.message);
+        }
+        else{
+            main.webContents.send('connected', portInfo);
+        }
+    });
+});
+
 function testSignal(){
-    main.webContents.send('RefreshConnection', null);
+    main.webContents.send('testSignal', null);
 }
 
 const menuTemplate = [
@@ -78,7 +96,7 @@ const menuTemplate = [
         label: 'File',
         submenu: [
             {
-              label: 'Refresh Connection',
+              label: 'Test',
               click(){
                   testSignal();
               }
@@ -93,3 +111,21 @@ const menuTemplate = [
         ]
     }
 ];
+
+if(process.env.NODE_ENV !== 'production'){
+    menuTemplate.push({
+        label: 'Developer',
+        submenu: [
+            {
+                role: 'reload'
+            },
+            {
+                label: 'Toggle Developer Tools',
+                accelerator: process.platform === 'darwin' ? 'Command + Alt + I' : 'Ctrl + Shift + I',
+                click(item, focusedWindow){
+                    focusedWindow.toggleDevTools();
+                }
+            }
+        ]
+    });
+}
