@@ -56,11 +56,15 @@ emtr.on('LogFile:created', ()=>{
 const electron = require('electron');
 const { ipcMain, app, Menu } = electron;
 const SerialPort = require('serialport');
+const fs = require('fs');
+const dateformat = require('dateformat');
 
 //Custom Modules
 const MainWindow = require('./MainWindow/Class');
+
 let main;
-let port;
+let port = null;
+let logFile = null;
 
 app.on('ready', ()=>{
     main = new MainWindow(`file://${__dirname}/index.html`);
@@ -70,8 +74,9 @@ app.on('ready', ()=>{
 });
 
 app.on('quit', () => {
-   if(port.isOpen){
-       port.close()
+   if(port!=null){
+       if(port.isOpen)
+           port.close();
    }
 });
 
@@ -85,6 +90,31 @@ ipcMain.on('connect', (event, portInfo) => {
             main.webContents.send('connected', portInfo);
         }
     });
+});
+
+ipcMain.on('generateLog', (event, path) => {
+    if(port != null){
+        fs.stat(`${path}/logs`,(err,stat)=>{
+            if(stat && stat.isDirectory()){
+                logFile = fs.createWriteStream(`${path}/logs/${dateformat(new Date(),'yyyy-mm-dd-HH.MM.ss')}.log`);
+            }else{
+                fs.mkdir(`${path}/logs`,(e)=>{
+                    if(e)
+                        console.log(e);
+                    logFile = fs.createWriteStream(`${path}/logs/${dateformat(new Date(),'yyyy-mm-dd-HH.MM.ss')}.log`);
+                })
+            }
+        });
+
+        port.on('data', (data) => {
+            logFile.write(data.toString());
+        });
+
+        main.webContents.send('logFile:success', null);
+    }
+    else{
+        main.webContents.send('logFile:failed', null);
+    }
 });
 
 function testSignal(){

@@ -18,7 +18,6 @@
 
         //Custom Modules
 
-        let port;
 
         //Loading Serial Ports in Selection Menu
         function RefreshSerial (){
@@ -35,8 +34,6 @@
             });
         }
 
-        window.addEventListener('load', RefreshSerial());
-
         //Connecting to the Serial Port
         function ConnectSerial(){
             const PortSelect = document.getElementById('SerialPortSelect');
@@ -49,23 +46,42 @@
             };
 
             ipcRenderer.send('connect', portInfo);
-
-            ipcRenderer.on('connected', (event, portInfo) => {
-                document.getElementById('connectionMessage').innerText = `Connected to ${portInfo.comName} at ${portInfo.baudRate}.`;
-            });
-
-            ipcRenderer.on('ConnectionError', (event, message) => {
-               document.getElementById('connectionMessage').innerText = message;
-            });
         }
 
+        ipcRenderer.on('connected', (event, portInfo) => {
+            document.getElementById('connectionMessage').innerText = `Connected to ${portInfo.comName} at ${portInfo.baudRate}.`;
+        });
+
+        ipcRenderer.on('ConnectionError', (event, message) => {
+            document.getElementById('connectionMessage').innerText = message;
+        });
+
+        function LoadCurrentDir(){
+            document.getElementById('filepath').value = __dirname.toString();
+        }
+
+        function generateLog(){
+            const path = document.getElementById('filepath').value;
+            ipcRenderer.send('generateLog', path);
+        }
+
+        ipcRenderer.on('logFile:success', (event) => {
+            document.getElementById('logFileMessage').innerText = 'Successfully Generated Log File';
+        });
+
+        ipcRenderer.on('logFile:failed', (event) => {
+           document.getElementById('logFileMessage').innerText = 'Error';
+        });
+
+        //execute when body has loaded
+        function UponLoad() {
+            LoadCurrentDir();
+            RefreshSerial();
+        }
+
+        //Just for the sake of testing
         function test(){
-            const li = document.createElement('li');
-            const a = document.getElementById('BaudRateSelect');
-            const comName = a.options[a.selectedIndex].text;
-            const text = document.createTextNode(comName);
-            li.appendChild(text);
-            document.querySelector('ul').appendChild(li);
+
         }
 
         ipcRenderer.on('testSignal', (event) => {
@@ -73,7 +89,7 @@
         });
     </script>
 </head>
-<body>
+<body onload="UponLoad()">
     <text>Choose a Serial Port: </text>
     <select id="SerialPortSelect"></select><br>
 
@@ -92,7 +108,15 @@
     <button type="button" onclick="RefreshSerial()">Refresh</button>
     <button type="button" onclick="ConnectSerial()">Connect</button><br>
 
-    <text id="connectionMessage"></text>
+    <text id="connectionMessage"></text><br>
+
+    <form>
+        Enter Directory to Store Log Files:
+        <input type="text" id="filepath" /><br>
+        <button type="button" id="createLog" onclick="generateLog()">Log to File</button><br>
+    </form>
+
+    <text id="logFileMessage"></text><br>
 
     <ul></ul>
 
