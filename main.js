@@ -84,7 +84,12 @@ ipcMain.on('connect', (event, portInfo) => {
     const baudRateInt = parseInt(portInfo.baudRate, 10);
     port = new SerialPort(portInfo.comName, {baudRate: baudRateInt}, (err) => {
         if(err){
-            main.webContents.send('ConnectionError', err.message);
+            if(port != null){
+                main.webContents.send('ConnectionError', 'Already connected to port');
+            }
+            else {
+                main.webContents.send('ConnectionError', `${err.message}. Port is most likely busy.`);
+            }
         }
         else{
             main.webContents.send('connected', portInfo);
@@ -93,7 +98,16 @@ ipcMain.on('connect', (event, portInfo) => {
 });
 
 ipcMain.on('generateLog', (event, path) => {
-    if(port != null){
+    let ValidDirectory;
+
+    try{
+        fs.lstatSync(path).isDirectory();
+        ValidDirectory = true;
+    } catch(e){
+        ValidDirectory = false;
+    }
+
+    if(port != null && ValidDirectory){
         fs.stat(`${path}/logs`,(err,stat)=>{
             if(stat && stat.isDirectory()){
                 logFile = fs.createWriteStream(`${path}/logs/${dateformat(new Date(),'yyyy-mm-dd-HH.MM.ss')}.log`);
@@ -113,7 +127,14 @@ ipcMain.on('generateLog', (event, path) => {
         main.webContents.send('logFile:success', null);
     }
     else{
-        main.webContents.send('logFile:failed', null);
+        if(!ValidDirectory){
+            const message = 'Error: Non-existent directory';
+            main.webContents.send('logFile:failed', message);
+        }
+        if(port == null){
+            const message = 'Error: Not connected to any serial port';
+            main.webContents.send('logFile:failed', message);
+        }
     }
 });
 
