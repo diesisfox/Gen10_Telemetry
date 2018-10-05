@@ -1,38 +1,58 @@
-/*
-  Old code that is now used as reference.
-*/
-const SerialPort = require('serialport');
+//
+//Uncommitted Changes from Australia
+//Author: James Liu
+//main.js fcr Telem 9th gen
+//
 const readline = require('readline');
+const fs = require('fs');
+const util = require('util');
+const SerialPort = require('serialport');
 const chalk = require('chalk');
 const ansi = require('ansi-escapes');
+const dateformat = require('dateformat');
+const CanParser = require('./canParser.js');
 const tk = require('terminal-kit');
-const CanParser = require('./app/canParser');
-
-let radioPort, canParser;
-let frameBank, powerBuf = [];
-let poweravg;
+const childProcess = require('child_process');
 
 const stdio = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-function choosePort(){
-    stdio.question('> ', (res)=>{
-        res = parseInt(res);
-        if(Number.isNaN(res) || res >= radioPort.length || res<0){
-            log(chalk.red("Pls no fucktarderino"));
-            choosePort();
-        }else{
-            radioPort = new SerialPort(radioPort[res].comName,{
-                baudRate:115200
-            });
-            canParser = new CanParser;
-            radioPort.pipe(canParser);
-            canParser.on('frame', displayFrame);
+const log = console.log;
+var radioPort, canParser, logFile, frameBank = [];
+var powerBuf = [];
+var poweravg;
+
+fs.stat(`./logs`,(err,stat)=>{
+    if(stat && stat.isDirectory()){
+        logFile = fs.createWriteStream(`./logs/${dateformat(new Date(),'yyyymmdd-HHMMss')}.log`);
+    }else{
+        fs.mkdir('./logs',(e)=>{
+            if(e) log(e);
+            logFile = fs.createWriteStream(`./logs/${dateformat(new Date(),'yyyymmdd-HHMMss')}.log`);
+        })
+    }
+})
+
+SerialPort.list((err,ports)=>{
+    if(ports.length){
+        radioPort = ports;
+        log('Choose a serial port:');
+        for(let i=0; i<ports.length; i++){
+            log(chalk.yellow(i)+') ' + chalk.cyan(ports[i].comName) + ', manufacturer: ' + chalk.dim(ports[i].manufacturer));
         }
-    })
-}
+        choosePort();
+    }
+});
+
+tk.terminal.on('mouse',(name,data)=>{
+    if(name == 'MOUSE_LEFT_BUTTON_PRESSED'){
+        readReport();
+    }else if(name == 'MOUSE_RIGHT_BUTTON_PRESSED'){
+        childProcess.spawn('osascript', ['-e','say "Fuck you too Frank!"']);
+    }
+});
 
 function readReport(){
     let reports = [];
@@ -49,6 +69,23 @@ function readReport(){
     if(reports.length>1)reports[reports.length-1] = 'and ' + reports[reports.length-1];
     reports = reports.join(', ');
     childProcess.spawn('osascript', ['-e',`say "${reports}"`]);
+}
+
+function choosePort(){
+    stdio.question('> ', (res)=>{
+        res = parseInt(res);
+        if(Number.isNaN(res) || res >= radioPort.length || res<0){
+            log(chalk.red("Pls no fucktarderino"));
+            choosePort();
+        }else{
+            radioPort = new SerialPort(radioPort[res].comName,{
+                baudRate:115200
+            });
+            canParser = new CanParser();
+            radioPort.pipe(canParser);
+            canParser.on('frame', displayFrame);
+        }
+    })
 }
 
 function displayFrame(frame){
@@ -75,7 +112,7 @@ function displayFrame(frame){
 
 function drawReport(frame){
     [w,h] = process.stdout.getWindowSize();
-    process.stdout.write($`{ansi.clearScreen}${('#').repeat(w)}
+    process.stdout.write(`${ansi.clearScreen}${('#').repeat(w)}
 
 ${chalk.cyan('BATTERY POWER:')}
 Voltage: ${
@@ -139,8 +176,7 @@ Last Reset: ${frameBank[0x503] ? chalk.magenta(frameBank[0x503].timestamp.toLoca
 Drive:	Velocity: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(0)).toFixed(3)) : '?'} rpm,	Current: ${frameBank[0x501] ? chalk.yellow((frameBank[0x501].data.readFloatLE(4)*100).toFixed(3)) : '?'} %
 Power: ${frameBank[0x502] ? chalk.yellow((frameBank[0x502].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x502].data.readFloatLE(4)).toFixed(3)) : '?'}
 Stats: ${frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)).toFixed(3) + ', ' + (frameBank[0x403].data.readFloatLE(4)).toFixed(3)) : '?'}
-Speed: ${
-        frameBank[0x05048225] ? chalk.yellow((((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
+Speed: ${frameBank[0x05048225] ? chalk.yellow((((frameBank[0x05048225].data[5]) | ((frameBank[0x05048225].data[6]&0xf) << 8))*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
         // frameBank[0x403] ? chalk.yellow((frameBank[0x403].data.readFloatLE(0)*60*Math.PI*(559/1000000)).toFixed(3)) : '?'
         }
 
@@ -157,23 +193,3 @@ ${util.inspect(frame,{colors:true})}
 `);
 }
 
-class SelectReadSerialPort {
-    reportRead(){
-        readReport();
-    }
-
-    selectPort(){
-        SerialPort.list((err,ports)=>{
-            if(ports.length){
-                radioPort = ports;
-                console.log('Choose a serial port:');
-                for(let i=0; i<ports.length; i++){
-                    console.log(chalk.yellow(i)+') ' + chalk.cyan(ports[i].comName) + ', manufacturer: ' + chalk.dim(ports[i].manufacturer));
-                }
-                choosePort();
-            }
-        });
-    }
-}
-
-module.exports = SelectReadSerialPort;

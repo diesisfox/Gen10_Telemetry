@@ -1,54 +1,12 @@
-/*
-    Main js file for gen10 telemetry
-*/
-//Old Code
-/*
-//node modules
-const EventEmitter = require('events');
-const childProcess = require('child_process');
-const electron = require('electron');
-
-const { app, ipcMain } = electron;
-
-//custom modules
-const LogStream = require('./app/LogStream');
-const SerialPort = require('./app/ConnectSerial');
-const CanParser = require('./app/canParser');
-const CanReader = require('./app/CanReader');
-
-const emtr = new EventEmitter();
-
-let radioPort;
-let logFile;
-
-//Opening Serial Port
-SerialPort.ConnectSerial(radioPort);
-
-//Creating file to log
-emtr.on('SerialPort:connected',()=>{
-    LogStream.create(logFile);
-    console.log('Log file created');
-});
-
-//Creating New CAN Parser
-emtr.on('LogFile:created', ()=>{
-    const CanParser = new CanParser();
-    radioPort.pipe(CanParser);
-
-    CanParser.on('frame', ()=>{
-        CanReader.displayFrame(logFile);
-    });
-
-    tk.terminal.on('mouse',(name,data)=>{
-        if(name == 'MOUSE_LEFT_BUTTON_PRESSED'){
-            CanReader.readReport();
-        }else if(name == 'MOUSE_RIGHT_BUTTON_PRESSED'){
-            childProcess.spawn('osascript', ['-e','say "Fuck you too Frank!"']);
-        }
-    });
-});
-
-*/
+//
+//
+//Author: Ryan Song
+//
+//Description: This the main file for Gen10 Telemetry application. It's main goal is to
+//run the main electron framework and performing majority of tasks in the backend.
+//Refer to the README.md file for installation instructions.
+//
+//
 
 'use strict';
 
@@ -61,19 +19,22 @@ const dateformat = require('dateformat');
 
 //Custom Modules
 const MainWindow = require('./MainWindow/Class');
+const canParser = require('./CAN/canParser');
+const frameHandler = require('./CAN/frameHandler');
 
 let main;
 let port = null;
 let logFile = null;
+const CanParser = new canParser();
 
 app.on('ready', ()=>{
     main = new MainWindow(`file://${__dirname}/index.html`);
-
     const mainMenu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(mainMenu);
 });
 
 app.on('quit', () => {
+   //close serial ports if any exist
    if(port!=null){
        if(port.isOpen)
            port.close();
@@ -83,18 +44,21 @@ app.on('quit', () => {
 ipcMain.on('connect', (event, portInfo) => {
     const baudRateInt = parseInt(portInfo.baudRate, 10);
     port = new SerialPort(portInfo.comName, {baudRate: baudRateInt}, (err) => {
+        //send error messages
         if(err){
             if(port != null){
-                main.webContents.send('ConnectionError', 'Already connected to port');
+                main.webContents.send('Connection:Error', 'Already connected to port');
             }
             else {
-                main.webContents.send('ConnectionError', `${err.message}. Port is most likely busy.`);
+                main.webContents.send('Connection:Error', `${err.message}. Port is most likely busy.`);
             }
         }
         else{
-            main.webContents.send('connected', portInfo);
+            main.webContents.send('Connection:Success', portInfo);
         }
     });
+    //send stream into CanParser
+    port.pipe(CanParser);
 });
 
 ipcMain.on('generateLog', (event, path) => {
@@ -120,10 +84,6 @@ ipcMain.on('generateLog', (event, path) => {
             }
         });
 
-        port.on('data', (data) => {
-            logFile.write(data.toString());
-        });
-
         main.webContents.send('logFile:success', null);
     }
     else{
@@ -138,6 +98,13 @@ ipcMain.on('generateLog', (event, path) => {
     }
 });
 
+CanParser.on('frame', (frame) => {
+    //refer to frameHandler.js
+    const message = frameHandler.generateDisplay(frame);
+    main.webContents.send('canFrame:generated', message);
+});
+
+//test signal if needed
 function testSignal(){
     main.webContents.send('testSignal', null);
 }

@@ -1,3 +1,9 @@
+//
+//Author: James Liu
+//
+//Description: Tabulates the relevant CAN ID's for referencing
+//
+
 const EventEmitter = require('events');
 
 const connState = {

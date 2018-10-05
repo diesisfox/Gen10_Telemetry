@@ -5,7 +5,7 @@
 const electron = require('electron');
 const { ipcRenderer , app } = electron;
 //Custom Modules
-const ports = require('../../app/ConnectSerial');
+const ports = require('../app/ConnectSerial');
 
 //displays to user serial ports that can be selected
 ipcRenderer.on('Port:Render',(event)=>{

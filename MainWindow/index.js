@@ -1,3 +1,13 @@
+//
+//
+//Author: Ryan Song
+//
+//Description: Contains all event handling functions for the index.html file.
+//Also acts upon the events emitted by main.js through ipcRenderer.
+//
+//
+
+
 'use strict';
 
 //Node Modules
@@ -37,11 +47,11 @@ function ConnectSerial(){
     ipcRenderer.send('connect', portInfo);
 }
 
-ipcRenderer.on('connected', (event, portInfo) => {
+ipcRenderer.on('Connection:Success', (event, portInfo) => {
     document.getElementById('connectionMessage').innerText = `Connected to ${portInfo.comName} at ${portInfo.baudRate}.`;
 });
 
-ipcRenderer.on('ConnectionError', (event, message) => {
+ipcRenderer.on('Connection:Error', (event, message) => {
     document.getElementById('connectionMessage').innerText = message;
 });
 
@@ -67,3 +77,9 @@ function UponLoad() {
     LoadCurrentDir();
     RefreshSerial();
 }
+
+//Display CanParser
+ipcRenderer.on('canFrame:generated', (event, message) => {
+    document.getElementByID('CanFrames').innerText = message;
+    document.getElementById('CanFrameData').innerText = message;
+});

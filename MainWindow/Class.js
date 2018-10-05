@@ -1,7 +1,10 @@
-/*
-Class definition for the main window.
-Contains most of the functionality behind the main window.
- */
+//
+//
+//Author: Ryan Song
+//
+//Description: Defines the class that is the main browser window launched by electron
+//
+//
 
 const electron = require('electron');
 //destructuring electron

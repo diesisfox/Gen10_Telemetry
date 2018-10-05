@@ -21,6 +21,7 @@
     "chalk": "^2.1.0",
     "dateformat": "^2.0.0",
     "electron": "^2.0.5",
+    "npm": "^6.4.1",
     "serialport": "^6.2.2",
     "terminal-kit": "^1.13.11"
   },
