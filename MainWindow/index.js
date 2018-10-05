@@ -19,10 +19,11 @@ const serial = require('serialport');
 
 
 //Loading Serial Ports in Selection Menu
-function RefreshSerial (){
+function RefreshSerial(){
     serial.list((err, ports) => {
         document.getElementById('SerialPortSelect').innerHTML = '';
         if(ports.length > 0) {
+            document.getElementById('connectionMessage').innerText = '';
             ports.forEach((element) => {
                 const option = document.createElement('option');
                 const text = document.createTextNode(element.comName.toString());
@@ -30,11 +31,14 @@ function RefreshSerial (){
                 document.getElementById('SerialPortSelect').appendChild(option);
             });
         }
+        else
+            document.getElementById('connectionMessage').innerText = 'No ports available';
     });
 }
 
 //Connecting to the Serial Port
 function ConnectSerial(){
+    //check if any port is selected
     const PortSelect = document.getElementById('SerialPortSelect');
     const RateSelect = document.getElementById('BaudRateSelect');
     const comName = PortSelect.options[PortSelect.selectedIndex].text;
@@ -43,7 +47,6 @@ function ConnectSerial(){
         comName: comName,
         baudRate: baudRate
     };
-
     ipcRenderer.send('connect', portInfo);
 }
 
