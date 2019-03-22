@@ -1,12 +1,12 @@
 {
-  "name": "BlueSky_Telemetry",
+  "name": "gen9_telemetry",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
   "scripts": {
+    "electron": "electron .",
     "test": "node --inspect-brk .",
-    "start": "electron .",
-    "rebuild": "electron-rebuild -f -w Gen10_Telemetry"
+    "start": "node ."
   },
   "keywords": [
     "Blue",
@@ -14,18 +14,20 @@
     "Solar",
     "Racing"
   ],
-  "author": "James Liu, Ryan Song, Japtegh Singh",
+  "author": "James Liu",
   "license": "ISC",
   "dependencies": {
     "ansi-escapes": "^2.0.0",
-    "chalk": "^2.1.0",
-    "dateformat": "^2.0.0",
-    "electron": "^2.0.5",
-    "npm": "^6.4.1",
-    "serialport": "^6.2.2",
-    "terminal-kit": "^1.13.11"
+    "chalk": "^2.4.2",
+    "child-process": "^1.0.2",
+    "child_process": "^1.0.2",
+    "dateformat": "^2.2.0",
+    "electron": "^4.0.5",
+    "events": "^3.0.0",
+    "serialport": "^7.1.4",
+    "terminal-kit": "^1.27.0"
   },
   "devDependencies": {
-    "electron-rebuild": "^1.8.1"
+    "electron-rebuild": "^1.8.4"
   }
 }
